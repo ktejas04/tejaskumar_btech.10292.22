@@ -121,15 +121,4 @@ router.post("/login", async (req, res) => {
   }
 });
 
-/**
- * GET /auth/me
- * Headers: { Authorization: "Bearer <token>" }
- */
-router.get("/me", authMiddleware, (req: AuthenticatedRequest, res) => {
-  return res.json({
-    message: "Authenticated",
-    user: req.user,
-  });
-});
-
 export default router;
