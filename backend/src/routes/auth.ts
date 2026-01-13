@@ -1,6 +1,8 @@
 import { Router } from "express";
 import prisma from "../lib/prisma";
 import { hashPassword } from "../utils/password";
+import { comparePassword } from "../utils/password";
+import { signToken } from "../utils/jwt";
 
 const router = Router();
 
@@ -53,6 +55,65 @@ router.post("/signup", async (req, res) => {
     });
   } catch (error) {
     console.error("Signup error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+});
+
+/**
+ * POST /auth/login
+ * body: { email, password }
+ */
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
+    }
+
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    // Compare password
+    const isValid = await comparePassword(password, user.password);
+
+    if (!isValid) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    // Issue JWT
+    const token = signToken({ userId: user.id });
+
+    // Response
+    return res.status(200).json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
     return res.status(500).json({
       message: "Internal server error",
     });
