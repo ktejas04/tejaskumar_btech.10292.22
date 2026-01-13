@@ -261,4 +261,56 @@ router.patch("/:id", async (req: AuthenticatedRequest, res) => {
   }
 });
 
+/**
+ * DELETE /tasks/:id
+ * Delete a task owned by the authenticated user
+ */
+router.delete("/:id", async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    if (typeof id !== "string") {
+      return res.status(400).json({
+        message: "Invalid task id",
+      });
+    }
+
+    // Check ownership
+    const task = await prisma.task.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        userId: true,
+      },
+    });
+
+    if (!task) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    if (task.userId !== req.user!.id) {
+      return res.status(403).json({
+        message: "Not authorized to delete this task",
+      });
+    }
+
+    // Delete task
+    await prisma.task.delete({
+      where: { id },
+    });
+
+    // Response
+    return res.status(200).json({
+      message: "Task deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete task error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+});
+
 export default router;
