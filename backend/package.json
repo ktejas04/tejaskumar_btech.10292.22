@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "tsx watch --env-file=.env src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/src/server.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.2.0",
