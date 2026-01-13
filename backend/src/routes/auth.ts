@@ -3,6 +3,7 @@ import prisma from "../lib/prisma";
 import { hashPassword } from "../utils/password";
 import { comparePassword } from "../utils/password";
 import { signToken } from "../utils/jwt";
+import { authMiddleware, type AuthenticatedRequest } from "../middleware/auth";
 
 const router = Router();
 
@@ -118,6 +119,17 @@ router.post("/login", async (req, res) => {
       message: "Internal server error",
     });
   }
+});
+
+/**
+ * GET /auth/me
+ * Headers: { Authorization: "Bearer <token>" }
+ */
+router.get("/me", authMiddleware, (req: AuthenticatedRequest, res) => {
+  return res.json({
+    message: "Authenticated",
+    user: req.user,
+  });
 });
 
 export default router;
