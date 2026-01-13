@@ -1,6 +1,8 @@
 import { Router } from "express";
 import prisma from "../lib/prisma";
 import { authMiddleware, type AuthenticatedRequest } from "../middleware/auth";
+import { TaskStatus } from "../../prisma/generated/enums";
+import { canTransition } from "../utils/taskFsm";
 
 const router = Router();
 
@@ -93,6 +95,84 @@ router.get("/", async (req: AuthenticatedRequest, res) => {
     });
   } catch (error) {
     console.error("List tasks error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+});
+
+/**
+ * PATCH /tasks/:id/status
+ * Update task status with FSM validation
+ * { status }
+ */
+router.patch("/:id/status", async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (typeof id !== "string") {
+      return res.status(400).json({
+        message: "Invalid task id",
+      });
+    }
+
+    if (!status) {
+      return res.status(400).json({
+        message: "Status is required",
+      });
+    }
+
+    // Fetch task and verify ownership
+    const task = await prisma.task.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        userId: true,
+      },
+    });
+
+    if (!task) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    if (task.userId !== req.user!.id) {
+      return res.status(403).json({
+        message: "Not authorized to update this task",
+      });
+    }
+
+    // FSM validation
+    if (!canTransition(task.status, status)) {
+      return res.status(400).json({
+        message: `Invalid status transition from ${task.status} to ${status}`,
+      });
+    }
+
+    // Update status
+    const updatedTask = await prisma.task.update({
+      where: { id },
+      data: {
+        status,
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        updatedAt: true,
+      },
+    });
+
+    // Response
+    return res.status(200).json({
+      message: "Task status updated",
+      task: updatedTask,
+    });
+  } catch (error) {
+    console.error("Update task status error:", error);
     return res.status(500).json({
       message: "Internal server error",
     });
