@@ -179,4 +179,86 @@ router.patch("/:id/status", async (req: AuthenticatedRequest, res) => {
   }
 });
 
+/**
+ * PATCH /tasks/:id
+ * Update task details (excluding status)
+ * { title?, description?, dueDate? }
+ */
+router.patch("/:id", async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+
+    if (typeof id !== "string") {
+      return res.status(400).json({
+        message: "Invalid task id",
+      });
+    }
+
+    const { title, description, dueDate, status } = req.body;
+
+    // Explicitly block status updates here
+    if (status !== undefined) {
+      return res.status(400).json({
+        message: "Task status cannot be updated via this endpoint",
+      });
+    }
+
+    // Check ownership
+    const task = await prisma.task.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        userId: true,
+      },
+    });
+
+    if (!task) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    if (task.userId !== req.user!.id) {
+      return res.status(403).json({
+        message: "Not authorized to update this task",
+      });
+    }
+
+    // Build update payload safely
+    const data: any = {};
+    if (title !== undefined) data.title = title;
+    if (description !== undefined) data.description = description;
+    if (dueDate !== undefined) data.dueDate = new Date(dueDate);
+
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({
+        message: "No valid fields provided for update",
+      });
+    }
+
+    const updatedTask = await prisma.task.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        dueDate: true,
+        updatedAt: true,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Task updated successfully",
+      task: updatedTask,
+    });
+  } catch (error) {
+    console.error("Update task error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+});
+
 export default router;
