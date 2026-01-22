@@ -22,6 +22,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Prevent prisma generate here
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=1
+
 # Copy only runtime deps
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
