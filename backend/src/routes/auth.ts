@@ -1,9 +1,8 @@
 import { Router } from "express";
-import prisma from "../lib/prisma";
-import { hashPassword } from "../utils/password";
-import { comparePassword } from "../utils/password";
-import { signToken } from "../utils/jwt";
-import { authMiddleware, type AuthenticatedRequest } from "../middleware/auth";
+import prisma from "../lib/prisma.js";
+import { hashPassword } from "../utils/password.js";
+import { comparePassword } from "../utils/password.js";
+import { signToken } from "../utils/jwt.js";
 
 const router = Router();
 

@@ -1,7 +1,7 @@
 import { Router } from "express";
-import prisma from "../lib/prisma";
-import { authMiddleware, type AuthenticatedRequest } from "../middleware/auth";
-import { comparePassword, hashPassword } from "../utils/password";
+import prisma from "../lib/prisma.js";
+import { authMiddleware, type AuthenticatedRequest } from "../middleware/auth.js";
+import { comparePassword, hashPassword } from "../utils/password.js";
 
 const router = Router();
 

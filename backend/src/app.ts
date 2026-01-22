@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
-import healthRouter from "./routes/health";
-import authRouter from "./routes/auth";
-import tasksRouter from "./routes/tasks";
-import usersRouter from "./routes/users";
+import healthRouter from "./routes/health.js";
+import authRouter from "./routes/auth.js";
+import tasksRouter from "./routes/tasks.js";
+import usersRouter from "./routes/users.js";
 
 const app = express();
 

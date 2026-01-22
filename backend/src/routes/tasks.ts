@@ -1,8 +1,7 @@
 import { Router } from "express";
-import prisma from "../lib/prisma";
-import { authMiddleware, type AuthenticatedRequest } from "../middleware/auth";
-import { TaskStatus } from "../../prisma/generated/enums";
-import { canTransition } from "../utils/taskFsm";
+import prisma from "../lib/prisma.js";
+import { authMiddleware, type AuthenticatedRequest } from "../middleware/auth.js";
+import { canTransition } from "../utils/taskFsm.js";
 
 const router = Router();
 
