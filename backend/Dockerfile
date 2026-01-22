@@ -1,26 +1,35 @@
-# Use Node LTS
-FROM node:20-alpine
+# ---------- BUILD STAGE ----------
+FROM node:20-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy dependency files first (for layer caching)
+# Copy dependency files
 COPY package.json package-lock.json ./
-
-# Copy Prisma schema
 COPY prisma ./prisma
 
-# Install dependencies
-RUN npm ci --omit=dev
+# Install ALL deps (needed for tsc + prisma)
+RUN npm ci
 
-# Copy rest of the code
+# Copy source
 COPY . .
 
-# Build TypeScript
+# Build TS
 RUN npm run build
 
-# Expose port (Render sets PORT env, this is informational)
+
+# ---------- RUNTIME STAGE ----------
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy only runtime deps
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+# Copy built output & prisma client
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+
 EXPOSE 3000
 
-# Start app
 CMD ["node", "dist/src/server.js"]
