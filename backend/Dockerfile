@@ -7,8 +7,11 @@ WORKDIR /app
 # Copy dependency files first (for layer caching)
 COPY package.json package-lock.json ./
 
+# Copy Prisma schema
+COPY prisma ./prisma
+
 # Install dependencies
-RUN npm ci
+RUN npm ci --omit=dev
 
 # Copy rest of the code
 COPY . .
@@ -20,4 +23,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Start app
-CMD ["npm", "run", "start"]
+CMD ["node", "dist/src/server.js"]
