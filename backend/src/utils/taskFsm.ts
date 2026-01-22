@@ -1,4 +1,4 @@
-import { TaskStatus } from "../../prisma/generated/enums.js";
+import { TaskStatus } from "@prisma/client";
 
 const transitions: Record<TaskStatus, TaskStatus[]> = {
   PENDING: ["IN_PROGRESS", "COMPLETED"],
